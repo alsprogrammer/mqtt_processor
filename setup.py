@@ -13,7 +13,7 @@ with open('HISTORY.rst') as history_file:
 requirements = [
     "pydantic==1.9.0",
     "paho-mqtt==1.6.1",
-    "git+https://github.com/alsprogrammer/custom_logger.git",
+    "-e git+https://github.com/alsprogrammer/custom_logger.git#egg=custom_logger",
 ]
 
 test_requirements = [ ]
