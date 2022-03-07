@@ -1,8 +1,11 @@
+import json
 from typing import List, Callable, Optional
 
 import paho.mqtt.client as mqtt
 
 from custom_logger import logging
+
+from mqtt_processor import MQTTEvent
 
 logger = logging.getLogger(__name__)
 
@@ -10,8 +13,8 @@ logger = logging.getLogger(__name__)
 class MQTTProcessor:
     def __init__(
             self,
-            message_callback: Optional[Callable],
-            topics_to_subscribe: List[str],
+            message_callback: Optional[Callable[[MQTTEvent], None]] = None,
+            topics_to_subscribe: Optional[List[str]] = None,
             host: str = "localhost",
             port: int = 1883,
             keepalive: int = 180
@@ -23,8 +26,8 @@ class MQTTProcessor:
             self._client = mqtt.Client()
 
             self._client.on_connect = self._on_connect
-            if message_callback:
-                self._client.on_message = message_callback
+            self._message_callback = message_callback
+            self._client.on_message = self._on_message
 
             self._client.connect(host, port, keepalive)
         except OSError as e:
@@ -36,8 +39,16 @@ class MQTTProcessor:
             logger.debug("Subscribing", topic=topic)
             self._client.subscribe(topic)
 
+    def _on_message(self, client, userdata, msg):
+        if self._message_callback and msg.topic in self._topics:
+            event = MQTTEvent(
+                topic=msg.topic,
+                message=json.loads(msg.payload)
+            )
+            self._message_callback(event)
+
     def publish(self, topic: str, message: str):
-        logger.debug("Starting mqtt processing", topic=topic, message=message)
+        logger.debug("Publish a message", topic=topic, message=message)
         self._client.publish(topic, message)
 
     def start_forever(self):
