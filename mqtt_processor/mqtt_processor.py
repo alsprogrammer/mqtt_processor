@@ -29,6 +29,7 @@ class MQTTProcessor:
             self._message_callback = message_callback
             self._client.on_message = self._on_message
 
+            logger.debug("Connecting to MQTT processor", host=host, port=port)
             self._client.connect(host, port, keepalive)
         except OSError as e:
             logger.error("Error connecting to service", error=e)
